@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+
+input {
+  border: 1px black solid;
+  border-radius: 6px;
+  padding: 4px;
+  width: 320px;
+  height: 40px;
+}
+
+input.checkbox {
+  width: 16px;
+  height: 16px;
+}
+input.input-long {
+  width: 874px;
+}
+
+.input-red {
+  border-color: red;
+}
+
+body {
+  background-color: #ebeef3;
+}
