@@ -1,9 +1,22 @@
 import { Button } from 'antd';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 
+import useSignUp from '../../hooks/useSignUp';
+import { AppDispatch } from '../../store/store';
+import { handleError, resError } from '../../tools/handleError';
+import {
+  handleUpdateUserInformation,
+  resUserData,
+} from '../../tools/handleUpdateUserInformation';
+import { Loader } from '../ui/Loader';
+
 export const SignUpPage = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const { registerUser, isLoading } = useSignUp();
   const {
     register,
     handleSubmit,
@@ -19,9 +32,31 @@ export const SignUpPage = () => {
         password: String(dataForm.password),
       },
     };
-    console.log(signUpData);
+    try {
+      const res = await registerUser({ user: signUpData });
+      if (res.data) {
+        handleUpdateUserInformation(res as resUserData, dispatch);
+        navigate('/');
+        window.location.reload();
+      } else if (res.error) {
+        return handleError(res as resError);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   });
-
+  if (isLoading)
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '100px',
+        }}
+      >
+        <Loader />
+      </div>
+    );
   return (
     <div className="w-[384px] h-[640px] py-12 px-8 rounded-md border-[1px] shadow-sm bg-white mx-auto mt-5">
       <h1 className="font-medium text-xl text-center m-0">

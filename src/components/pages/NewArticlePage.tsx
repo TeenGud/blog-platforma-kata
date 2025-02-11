@@ -1,21 +1,33 @@
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 
+import { RootState } from '../../store/store';
 import { NewArticle } from '../ui/NewArticle';
 import { Tag } from '../ui/Tag';
+
+export type tags = { id: string; tag: typeof Tag }[];
 
 export const NewArticlePage = () => {
   const location = useLocation().pathname;
 
-  const tagList = location === '/new-article' ? [] : ['1', '2', '3', '4', '5'];
+  const tagListText = useSelector(
+    (state: RootState) => state.article.article.tagList,
+  );
 
-  const handleDeleteTag = (e: any, setTags: any, setTagsText: any) => {
+  const tagList = location === '/new-article' ? [] : tagListText;
+
+  const handleDeleteTag = (
+    e: any,
+    setTags: (tags: tags | any) => void,
+    setTagsText: (tagsText: string[] | any) => void,
+  ) => {
     const tagIdFromButton = e?.target?.getAttribute('data-key');
-    setTags((tags: any) =>
-      tags.filter((tag: any) => tag.id !== tagIdFromButton),
+    setTags((tags: tags) =>
+      tags.filter((tag: { id: string }) => tag.id !== tagIdFromButton),
     );
-    setTagsText((prevTagsText: any) => {
+    setTagsText((prevTagsText: [string]) => {
       const entries = Object.entries(prevTagsText);
       return Object.fromEntries(
         entries.filter(([key]) => key !== tagIdFromButton),
@@ -23,7 +35,7 @@ export const NewArticlePage = () => {
     });
   };
 
-  const handleAddTag = (event: any) => {
+  const handleAddTag = (event: Event) => {
     event.preventDefault();
     if (tags.length > 5) {
       return;
@@ -36,7 +48,7 @@ export const NewArticlePage = () => {
         tag: (
           <Tag
             tagId={tagId}
-            handleDeleteTag={(e: any) =>
+            handleDeleteTag={(e: Event) =>
               handleDeleteTag(e, setTags, setTagsText)
             }
             setTagsText={setTagsText}
@@ -56,7 +68,7 @@ export const NewArticlePage = () => {
             tag: (
               <Tag
                 tagId={tagId}
-                handleDeleteTag={(e: any) =>
+                handleDeleteTag={(e: Event) =>
                   handleDeleteTag(e, setTags, setTagsText)
                 }
                 setTagsText={setTagsText}
@@ -95,9 +107,11 @@ export const NewArticlePage = () => {
       title={
         location === '/new-article' ? 'Create new article' : 'Edit the article'
       }
-      tags={tags}
+      newOrUpdate={location === '/new-article' ? 'New' : 'Update'}
+      tags={tags as unknown as tags}
       handleAddTag={handleAddTag}
-      tagsText={tagsText}
+      tagsText={tagsText as string[]}
+      slug={location.split('/')[2]}
     />
   );
 };

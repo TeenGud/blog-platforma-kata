@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 
 import './index.css';
 
+import { Provider } from 'react-redux';
 import { createHashRouter, RouterProvider } from 'react-router-dom';
 
 import MainLayout from './components/MainLayout';
@@ -12,6 +13,7 @@ import { PrivateRoute } from './components/pages/PrivateRoute';
 import { SignInPage } from './components/pages/SignInPage';
 import { SignUpPage } from './components/pages/SignUpPage';
 import { SinglePostPage } from './components/pages/SinglePostPage';
+import { store } from './store/store';
 
 const router = createHashRouter([
   {
@@ -66,5 +68,7 @@ const router = createHashRouter([
 ]);
 
 createRoot(document.getElementById('root')!).render(
-  <RouterProvider router={router} />,
+  <Provider store={store}>
+    <RouterProvider router={router} />
+  </Provider>,
 );

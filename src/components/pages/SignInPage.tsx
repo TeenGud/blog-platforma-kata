@@ -1,9 +1,22 @@
 import { Button } from 'antd';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 
+import useSignIn from '../../hooks/useSignIn';
+import { AppDispatch } from '../../store/store';
+import { handleError, resError } from '../../tools/handleError';
+import {
+  handleUpdateUserInformation,
+  resUserData,
+} from '../../tools/handleUpdateUserInformation';
+import { Loader } from '../ui/Loader';
+
 export const SignInPage = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const { loginUser, isLoading } = useSignIn();
   const {
     register,
     handleSubmit,
@@ -18,7 +31,31 @@ export const SignInPage = () => {
       },
     };
     console.log(loginData);
+    try {
+      const res = await loginUser({ user: loginData });
+      if (res.data) {
+        handleUpdateUserInformation(res as resUserData, dispatch);
+        navigate('/');
+        window.location.reload();
+      } else if (res.error) {
+        return handleError(res as resError);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   });
+  if (isLoading)
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '100px',
+        }}
+      >
+        <Loader />
+      </div>
+    );
   return (
     <div className="w-[400px] h-[600px] py-12 px-8 rounded-md shadow-md bg-white mx-auto mt-5">
       <h1 className="font-medium text-xl text-center">Sign in</h1>

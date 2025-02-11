@@ -1,13 +1,23 @@
 import { Button } from 'antd';
+import { MouseEventHandler } from 'react';
 import { useForm } from 'react-hook-form';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
-// import { Tag } from './Tag';
+import useCreateTheArticle from '../../hooks/useCreateTheArticle';
+import useUpdateTheArticle from '../../hooks/useUpdateTheArticle';
+import { RootState } from '../../store/store';
+import { handleError, resError } from '../../tools/handleError';
+import { tags } from '../pages/NewArticlePage';
+import { Loader } from './Loader';
 
 interface NewArticleInterface {
   title: string;
-  tags: any;
-  tagsText: any;
-  handleAddTag: any;
+  tags: tags;
+  tagsText: string[];
+  handleAddTag: (event: Event) => void;
+  newOrUpdate: string;
+  slug?: string;
 }
 
 export const NewArticle = ({
@@ -15,12 +25,35 @@ export const NewArticle = ({
   tags,
   tagsText,
   handleAddTag,
+  newOrUpdate,
+  slug,
 }: NewArticleInterface) => {
+  const articleTitle = useSelector(
+    (state: RootState) => state.article.article.title,
+  );
+  const articleDescription = useSelector(
+    (state: RootState) => state.article.article.description,
+  );
+  const articleBody = useSelector(
+    (state: RootState) => state.article.article.body,
+  );
+  const navigate = useNavigate();
+  const { createTheArticle, isLoading } = useCreateTheArticle();
+  const { updateTheArticle, isLoadingUpdate } = useUpdateTheArticle();
+  const defaultValues =
+    newOrUpdate === 'Update'
+      ? {
+          title: articleTitle,
+          description: articleDescription,
+          text: articleBody,
+          tagList: tagsText,
+        }
+      : undefined;
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({ defaultValues });
   const handleSubmitFull = handleSubmit(async dataForm => {
     const newArticle = {
       article: {
@@ -31,7 +64,35 @@ export const NewArticle = ({
       },
     };
     console.log(newArticle);
+    try {
+      let res = undefined;
+      if (newOrUpdate === 'New') {
+        res = await createTheArticle({ article: newArticle });
+      } else {
+        res = await updateTheArticle({ article: newArticle, slug: slug });
+      }
+      if (res.data) {
+        navigate('/');
+        window.location.reload();
+      } else if (res.error) {
+        return handleError(res as resError);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   });
+  if (isLoading || isLoadingUpdate)
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '100px',
+        }}
+      >
+        <Loader />
+      </div>
+    );
   return (
     <div className="bg-white shadow-sm w-[938px] py-12 px-8 rounded-md mx-auto mt-6 mb-9">
       <h2 className="text-center font-medium text-xl">{title}</h2>
@@ -42,8 +103,8 @@ export const NewArticle = ({
             {...register('title', {
               required: 'This field is required',
               maxLength: {
-                value: 40,
-                message: 'Your title needs to be less than 40 characters',
+                value: 60,
+                message: 'Your title needs to be less than 60 characters',
               },
             })}
             className={`input-long h-[40px] ${errors.title?.message ? 'input-red' : ''}`}
@@ -110,7 +171,9 @@ export const NewArticle = ({
               variant="outlined"
               className="w-[160px] h-[40px] text-xl text-blue-500 border-blue-500 py-[5px]"
               size="large"
-              onClick={handleAddTag}
+              onClick={
+                handleAddTag as unknown as MouseEventHandler<HTMLElement>
+              }
             >
               Add tag
             </Button>

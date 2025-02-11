@@ -1,11 +1,22 @@
 import { Button } from 'antd';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 
+import useDeleteTheArticle from '../../hooks/useDeleteTheArticle';
+import {
+  addBody,
+  addDescription,
+  addTagList,
+  addTitle,
+} from '../../store/currentArticleData/currentArticleData';
+import { AppDispatch } from '../../store/store';
 import { formatTime } from '../../tools/formatTime';
+import { handleError, resError } from '../../tools/handleError';
 import { truncateString } from '../../tools/truncateString';
 import { Article } from '../../types/interfaces/ArticleInterface';
 import { Likes } from './Likes';
+import { Loader } from './Loader';
 
 interface PostInterface {
   classes?: string;
@@ -14,18 +25,52 @@ interface PostInterface {
 }
 
 export const Post = ({ classes, isMyPost, article }: PostInterface) => {
-  const { title, description, tagList, author } = article;
+  const navigate = useNavigate();
+  const { deleteTheArticle, isLoading } = useDeleteTheArticle();
+  const handleDeleteTheArticle = async () => {
+    try {
+      const res = await deleteTheArticle({ slug });
+      if (!res.error) {
+        navigate('/');
+        window.location.reload();
+      } else if (res.error) {
+        return handleError(res as resError);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const dispatch = useDispatch<AppDispatch>();
+  const handleEdit = () => {
+    dispatch(addBody(body));
+    dispatch(addDescription(description));
+    dispatch(addTitle(title));
+    dispatch(addTagList(tagList));
+  };
+  const {
+    title,
+    description,
+    tagList,
+    author,
+    favoritesCount,
+    createdAt,
+    slug,
+    body,
+    favorited,
+  } = article;
   const [isHidden, setIsHidden] = useState(true);
-  //   const title = 'Example article';
-  //   const description = 'First example article. Working really hard!';
-  //   const tagList = ['sex', 'article', 'games', 'dota2'];
-  //   const author = {
-  //     username: 'Teen Gud',
-  //     image:
-  //       'https://sun9-38.userapi.com/impg/mV_caVLA-mLR7Nmy_zB7PP6h32cjnQKgU9HNig/LF2HObOF3Ic.jpg?size=828x1101&quality=95&sign=ee2679363fa5bd07e47a8d0ba82e5f8f&type=album',
-  //   };
-  const slug = '123';
-  const createdAt = '2025-02-11ABCEDF12';
+  if (isLoading)
+    return (
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: '100px',
+        }}
+      >
+        <Loader />
+      </div>
+    );
   return (
     <li
       className={`${classes} p-2 flex items-start justify-between h-[150px] cursor-pointer bg-white`}
@@ -35,7 +80,11 @@ export const Post = ({ classes, isMyPost, article }: PostInterface) => {
           <h3 className="text-blue-600 text-xl m-0">
             {truncateString(title, 60)}
           </h3>
-          <Likes />
+          <Likes
+            favoritesCount={favoritesCount}
+            slug={slug}
+            isFavoritedServer={favorited}
+          />
         </div>
         <ul className="list-none flex gap-2 p-0 mt-0">
           {tagList.map((tag: string, index) => {
@@ -59,11 +108,15 @@ export const Post = ({ classes, isMyPost, article }: PostInterface) => {
         </div>
         {isMyPost && (
           <div className="flex gap-2 mt-3 relative">
-            <Button variant="outlined" color="danger" onClick={() => {}}>
+            <Button
+              variant="outlined"
+              color="danger"
+              onClick={() => setIsHidden(false)}
+            >
               Delete
             </Button>
-            <Link to={`/articles/${slug}/edit`} onClick={() => {}}>
-              <Button variant="outlined" onClick={() => {}} color="green">
+            <Link to={`/articles/${slug}/edit`}>
+              <Button variant="outlined" onClick={handleEdit} color="green">
                 Edit
               </Button>
             </Link>
@@ -84,7 +137,7 @@ export const Post = ({ classes, isMyPost, article }: PostInterface) => {
                   />
                 </svg>
                 <span className="text-sm">
-                  Are you sure to delete this article?
+                  Are you sure you want to delete this article?
                 </span>
               </div>
               <div className="flex justify-end">
@@ -97,7 +150,7 @@ export const Post = ({ classes, isMyPost, article }: PostInterface) => {
                 </Button>
                 <Button
                   className="bg-blue-500 text-white text-sm w-[40px] h-[24px]"
-                  onClick={() => {}}
+                  onClick={handleDeleteTheArticle}
                 >
                   Yes
                 </Button>

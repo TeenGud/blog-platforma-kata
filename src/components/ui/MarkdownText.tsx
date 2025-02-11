@@ -1,6 +1,6 @@
 import Markdown from 'markdown-to-jsx';
 
-import '../../defaultCss.module.css';
+import '../../defaultCss.css';
 
 export const MarkdownText = ({ text }: { text: string }) => {
   return (

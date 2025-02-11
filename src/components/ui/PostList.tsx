@@ -16,7 +16,7 @@ export const PostList = ({ articles }: PostListInterface) => {
             <Post
               classes="w-[941px] shadow-md"
               article={article}
-              isMyPost={true}
+              isMyPost={false}
             />
           </Link>
         );

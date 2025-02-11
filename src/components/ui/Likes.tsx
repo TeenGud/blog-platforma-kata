@@ -1,22 +1,62 @@
+import { MouseEventHandler, useState } from 'react';
+
+import useLikeTheArticle from '../../hooks/useLikeTheArticle';
+import useUnlikeTheArticle from '../../hooks/useUnlikeTheArticle';
+import { handleError, resError } from '../../tools/handleError';
+
 interface Likes {
-  token: string | null;
-  isFavorited: boolean;
-  slug: string;
+  token?: string | null;
+  isFavoritedServer?: boolean;
+  slug?: string;
+  favoritesCount: number;
 }
 
-export const Likes = () => {
-  const token = '';
+export const Likes = ({ favoritesCount, slug, isFavoritedServer }: Likes) => {
+  const { likeTheArticle } = useLikeTheArticle();
+  const { unlikeTheArticle } = useUnlikeTheArticle();
+  const [isFavoritedClient, setIsFavoritedClient] = useState(isFavoritedServer);
+  const token = localStorage.getItem('token');
+  const handleToggleLike = async (event: Event) => {
+    event.preventDefault();
+    if (!isFavoritedClient) {
+      try {
+        const res = await likeTheArticle({ slug });
+        setIsFavoritedClient(true);
+        if (!res.error) {
+          window.location.reload();
+        } else if (res.error) {
+          return handleError(res as resError);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      try {
+        const res = await unlikeTheArticle({ slug });
+        setIsFavoritedClient(false);
+        if (!res.error) {
+          window.location.reload();
+        } else if (res.error) {
+          return handleError(res as resError);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  };
   return (
     <button
-      className="flex gap-1 items-center"
+      className="flex gap-1 items-center cursor-pointer"
       disabled={!token}
-      onClick={() => {}}
+      onClick={
+        handleToggleLike as unknown as MouseEventHandler<HTMLButtonElement>
+      }
     >
       <svg
         width="30px"
         height="30px"
         viewBox="0 0 24 24"
-        fill="none"
+        fill={isFavoritedClient || isFavoritedServer ? 'red' : 'none'}
         xmlns="http://www.w3.org/2000/svg"
       >
         <path
@@ -29,7 +69,7 @@ export const Likes = () => {
           strokeLinejoin="round"
         />
       </svg>
-      <span>60</span>
+      <span>{favoritesCount}</span>
     </button>
   );
 };

@@ -1,9 +1,19 @@
 import { Button } from 'antd';
-import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+
+import { AppDispatch, RootState } from '../../store/store';
+import { handleLogOut } from '../../tools/handleLogOut';
 
 export const Header = () => {
-  const login = false;
-  if (login) {
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const token = useSelector((state: RootState) => state.user.user.token);
+  const username = useSelector((state: RootState) => state.user.user.username);
+  const avatarUrl = useSelector(
+    (state: RootState) => state.user.user.avatarUrl,
+  );
+  if (token) {
     return (
       <header className="p-4 flex justify-between items-center h-[80px] bg-white">
         <Link to="/">
@@ -23,9 +33,9 @@ export const Header = () => {
             to="/profile"
             className="flex gap-2 items-center hover:text-purple-400 transition-colors"
           >
-            <span>Teen Gud</span>
+            <span>{username}</span>
             <img
-              src="https://sun9-38.userapi.com/impg/mV_caVLA-mLR7Nmy_zB7PP6h32cjnQKgU9HNig/LF2HObOF3Ic.jpg?size=828x1101&quality=95&sign=ee2679363fa5bd07e47a8d0ba82e5f8f&type=album"
+              src={avatarUrl || undefined}
               alt="avatar"
               width={46}
               height={46}
@@ -34,7 +44,7 @@ export const Header = () => {
           <Link to="/articles">
             <Button
               variant="outlined"
-              onClick={() => {}}
+              onClick={() => handleLogOut(dispatch, navigate)}
               className="text-xl"
               size="large"
             >
